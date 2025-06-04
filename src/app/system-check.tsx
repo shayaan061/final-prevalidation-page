@@ -154,19 +154,6 @@ export default function SystemCheck() {
     return "All systems ready"
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "passed":
-        return <CheckCircle className="w-5 h-5 text-green-500" />
-      case "failed":
-        return <XCircle className="w-5 h-5 text-red-500" />
-      case "testing":
-        return <AlertCircle className="w-5 h-5 text-yellow-500 animate-pulse" />
-      default:
-        return <div className="w-5 h-5 rounded-full bg-gray-200" />
-    }
-  }
-
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -183,186 +170,192 @@ export default function SystemCheck() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="flex">
-        
-
-        {/* Sidebar */}
-        <div className="w-80 bg-white shadow-lg p-4 min-h-screen">
-          <img
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Sidebar */}
+      <div className="w-full lg:w-80 bg-white shadow-lg p-4">
+        <img
           src="/logoNew.png"
           alt="Logo"
-          className="w-16 h-10 m-2
-          mb-4"   
+          className="w-16 h-10 m-2 mb-4"
         />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Instructions</h2>
-          <p className="text-gray-600 mb-8">Read Carefully Before Starting Interview</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Instructions</h2>
+        <p className="text-gray-600 mb-8">Read Carefully Before Starting Interview</p>
 
+        <div className="space-y-6">
+          {["Clean Background", "Sit In Noiseless Environment", "Stable Network", "After Interview"].map((step, i) => (
+            <div key={i} className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                {step === "Start Interview" ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <span className="text-blue-600 font-semibold text-sm">{i + 1}</span>
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">{step}</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {step === "Clean Background" &&
+                    "Ensure your background should be clean and clear."}
+                  {step === "Sit In Noiseless Environment" &&
+                    'Ensure your Audio should be audible and their should not any background noise.'}
+                  {step === "Stable Network" &&
+                    "Check your network before joining the interview call."}
+                  {step === "After Interview" &&
+                    "Do not move or close tab after ending the interview till the video is uploaded successfully. "}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 flex flex-col items-center">
+       <div className="w-full max-w-6xl mb-6 flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4">
+  <div className="text-sm text-gray-600 flex items-center">
+    <span>{getStatusMessage()}</span>
+  </div>
+  <Button disabled={!allTestsPassed} size="sm" onClick={() => alert("Interview starting...")}>
+    Start Interview
+  </Button>
+</div>
+
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl">
+          {/* Left column */}
           <div className="space-y-6">
-            {/* Steps */}
-            {["Clean Background", "Sit In Noiseless Environment", "Stable Network", "After Interview"].map((step, i) => (
-              <div key={i} className="flex items-start space-x-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  {step === "Start Interview" ? (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <span className="text-blue-600 font-semibold text-sm">{i + 1}</span>
+            {/* System Test */}
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-xl">System Test Instructions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc list-inside space-y-0.5 text-sm text-gray-700">
+                  <li>Find a quiet, well-lit place.</li>
+                  <li>Allow camera and mic access.</li>
+                  <li>Click each test to verify devices.</li>
+                  <li>All tests must pass to proceed.</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Microphone Test */}
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <Mic className="w-4 h-4" />
+                  <span>Microphone Test</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center space-y-3">
+                  <Progress value={micVolume} max={100} className="w-full h-2" />
+                  <Button size="sm" onClick={startMicrophone} disabled={micEnabled}>
+                    Start Microphone Test
+                  </Button>
+                  {testStatus.microphone === "passed" && (
+                    <p className="text-green-600 text-sm flex items-center space-x-1">
+                      <CheckCircle className="w-4 h-4" /> <span>Passed</span>
+                    </p>
+                  )}
+                  {testStatus.microphone === "failed" && (
+                    <p className="text-red-600 text-sm flex items-center space-x-1">
+                      <XCircle className="w-4 h-4" /> <span>{micError}</span>
+                    </p>
+                  )}
+                  {testStatus.microphone === "testing" && (
+                    <p className="text-yellow-600 text-sm flex items-center space-x-1">
+                      <AlertCircle className="w-4 h-4 animate-pulse" /> <span>Testing...</span>
+                    </p>
                   )}
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{step}</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {step === "Clean Background" &&
-                      "Ensure your background should be clean and clear."}
-                    {step === "Sit In Noiseless Environment" &&
-                      'Ensure your Audio should be audible and their should not any background noise.'}
-                    {step === "Stable Network" &&
-                      "Check your network before joining the interview call."}
-                    {step === "After Interview" &&
-                      "Do not move or close tab after ending the interview till the video is uploaded successfully. "}
-                  </p>
+              </CardContent>
+            </Card>
+
+            {/* Network Test */}
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <Wifi className="w-4 h-4" />
+                  <span>Network Test</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center space-y-3 w-full">
+                  {testStatus.network === "testing" && (
+                    <>
+                      <p className="text-gray-700 text-sm">Testing...</p>
+                      <Progress className="w-full h-2" />
+                    </>
+                  )}
+                  {testStatus.network === "idle" && (
+                    <Button size="sm" variant="outline" onClick={runNetworkTest}>
+                      Run Network Test
+                    </Button>
+                  )}
+                  {testStatus.network === "passed" && networkResults && (
+                    <div className="text-gray-700 text-sm space-y-1">
+                      <p><strong>Download:</strong> {networkResults.download} Mbps</p>
+                      <p><strong>Upload:</strong> {networkResults.upload} Mbps</p>
+                      <p><strong>Ping:</strong> {networkResults.ping} ms</p>
+                    </div>
+                  )}
+                  {testStatus.network === "failed" && (
+                    <p className="text-red-600 text-sm">{networkError || "Network test failed."}</p>
+                  )}
                 </div>
-              </div>
-            ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right column */}
+          <div className="space-y-6 flex justify-center">
+            {/* Camera Test */}
+            <Card className="w-full max-w-lg">
+  <CardHeader>
+    <CardTitle className="flex items-center space-x-3 text-xl">
+      <Camera className="w-6 h-6" />
+      <span>Camera Test</span>
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="flex flex-col items-center space-y-4">
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        className="w-full max-w-[320px] h-[260px] bg-black rounded-xl shadow-md"
+      />
+      <Button size="default" onClick={startCamera} disabled={cameraEnabled} className="text-base px-6 py-2">
+        Start Camera Test
+      </Button>
+
+      {testStatus.camera === "passed" && (
+        <p className="text-green-600 text-base flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>Passed</span>
+        </p>
+      )}
+      {testStatus.camera === "failed" && (
+        <p className="text-red-600 text-base flex items-center space-x-2">
+          <XCircle className="w-5 h-5" />
+          <span>{cameraError}</span>
+        </p>
+      )}
+      {testStatus.camera === "testing" && (
+        <p className="text-yellow-600 text-base flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5 animate-pulse" />
+          <span>Testing...</span>
+        </p>
+      )}
+    </div>
+  </CardContent>
+</Card>
+
           </div>
         </div>
-
-     <main className="flex-1 p-6 flex flex-col justify-center items-center">
-  <div className="w-full flex justify-end items-center space-x-4 mb-6">
-    <p className="text-sm text-gray-600">{getStatusMessage()}</p>
-    <Button disabled={!allTestsPassed} size="sm" onClick={() => alert("Interview starting...")}>
-      Start Interview
-    </Button>
-  </div>
-
-  <div className="grid grid-cols-2 gap-6">
-    {/* Left column */}
-    <div className="space-y-6">
-      {/* System Test */}
-      <Card className="w-[340px] h-[180px]">
-        <CardHeader>
-          <CardTitle className="text-xl">System Test Instructions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="list-disc list-inside space-y-.1 text-sm text-gray-700">
-            <li>Find a quiet, well-lit place.</li>
-            <li>Allow camera and mic access.</li>
-            <li>Click each test to verify devices.</li>
-            <li>All tests must pass to proceed.</li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Microphone Test */}
-      <Card className="w-[340px] h-[180px]">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Mic className="w-4 h-4" />
-            <span>Microphone Test</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center space-y-3">
-            <Progress value={micVolume} max={100} className="w-full h-2" />
-            <Button size="sm" onClick={startMicrophone} disabled={micEnabled}>
-              Start Microphone Test
-            </Button>
-            {testStatus.microphone === "passed" && (
-              <p className="text-green-600 text-sm flex items-center space-x-1">
-                <CheckCircle className="w-4 h-4" /> <span>Passed</span>
-              </p>
-            )}
-            {testStatus.microphone === "failed" && (
-              <p className="text-red-600 text-sm flex items-center space-x-1">
-                <XCircle className="w-4 h-4" /> <span>{micError}</span>
-              </p>
-            )}
-            {testStatus.microphone === "testing" && (
-              <p className="text-yellow-600 text-sm flex items-center space-x-1">
-                <AlertCircle className="w-4 h-4 animate-pulse" /> <span>Testing...</span>
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Network Test */}
-      <Card className="w-[340px] h-[180px]">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Wifi className="w-4 h-4" />
-            <span>Network Test</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center space-y-3">
-            {testStatus.network === "testing" && (
-              <>
-                <p className="text-gray-700 text-sm">Testing...</p>
-                <Progress className="w-full h-2" />
-              </>
-            )}
-            {testStatus.network === "idle" && (
-              <Button size="sm" variant="outline" onClick={runNetworkTest}>
-                Run Network Test
-              </Button>
-            )}
-            {testStatus.network === "passed" && networkResults && (
-              <div className="text-gray-700 text-sm space-y-1">
-                <p><strong>Download:</strong> {networkResults.download} Mbps</p>
-                <p><strong>Upload:</strong> {networkResults.upload} Mbps</p>
-                <p><strong>Ping:</strong> {networkResults.ping} ms</p>
-              </div>
-            )}
-            {testStatus.network === "failed" && (
-              <p className="text-red-600 text-sm">{networkError || "Network test failed."}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-
-    {/* Right column */}
-    <div className="space-y-6">
-      {/* Camera Test */}
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Camera className="w-4 h-4" />
-            <span>Camera Test</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center space-y-3">
-            <video ref={videoRef} autoPlay muted playsInline className="w-[280px] h-[240px] bg-black rounded-lg" />
-            <Button size="sm" onClick={startCamera} disabled={cameraEnabled}>
-              Start Camera Test
-            </Button>
-            {testStatus.camera === "passed" && (
-              <p className="text-green-600 text-sm flex items-center space-x-1">
-                <CheckCircle className="w-4 h-4" /> <span>Passed</span>
-              </p>
-            )}
-            {testStatus.camera === "failed" && (
-              <p className="text-red-600 text-sm flex items-center space-x-1">
-                <XCircle className="w-4 h-4" /> <span>{cameraError}</span>
-              </p>
-            )}
-            {testStatus.camera === "testing" && (
-              <p className="text-yellow-600 text-sm flex items-center space-x-1">
-                <AlertCircle className="w-4 h-4 animate-pulse" /> <span>Testing...</span>
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  </div>
-</main>
-
-      </div>
+      </main>
     </div>
   )
 }
-
-
