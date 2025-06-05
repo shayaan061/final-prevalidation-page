@@ -47,6 +47,7 @@ export default function SystemCheck() {
   const micTestTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isMicCheckingRef = useRef(false)
 
+  // Camera test function
   const startCamera = async () => {
     try {
       setTestStatus((prev) => ({ ...prev, camera: "testing" }))
@@ -71,6 +72,7 @@ export default function SystemCheck() {
     }
   }
 
+  // Microphone test function
   const startMicrophone = async () => {
     try {
       setTestStatus((prev) => ({ ...prev, microphone: "testing" }))
@@ -124,6 +126,7 @@ export default function SystemCheck() {
     }
   }
 
+  // Network test function (mocked)
   const runNetworkTest = async () => {
     setTestStatus((prev) => ({ ...prev, network: "testing" }))
     setNetworkError("")
@@ -154,6 +157,7 @@ export default function SystemCheck() {
     return "All systems ready"
   }
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -170,26 +174,17 @@ export default function SystemCheck() {
   }, [])
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
-      <div className="w-full lg:w-80 bg-white shadow-lg p-4">
-        <img
-          src="/logoNew.png"
-          alt="Logo"
-          className="w-16 h-10 m-2 mb-4"
-        />
+      <div className="w-full lg:w-72 bg-white shadow-lg p-4 overflow-y-auto">
+        <img src="/logoNew.png" alt="Logo" className="w-16 h-10 m-2 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Instructions</h2>
         <p className="text-gray-600 mb-8">Read Carefully Before Starting Interview</p>
-
         <div className="space-y-6">
           {["Clean Background", "Sit In Noiseless Environment", "Stable Network", "After Interview"].map((step, i) => (
             <div key={i} className="flex items-start space-x-3">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                {step === "Start Interview" ? (
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                ) : (
-                  <span className="text-blue-600 font-semibold text-sm">{i + 1}</span>
-                )}
+                <span className="text-blue-600 font-semibold text-sm">{i + 1}</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">{step}</h3>
@@ -197,11 +192,11 @@ export default function SystemCheck() {
                   {step === "Clean Background" &&
                     "Ensure your background should be clean and clear."}
                   {step === "Sit In Noiseless Environment" &&
-                    'Ensure your Audio should be audible and their should not any background noise.'}
+                    "Ensure your Audio should be audible and there should not be any background noise."}
                   {step === "Stable Network" &&
                     "Check your network before joining the interview call."}
                   {step === "After Interview" &&
-                    "Do not move or close tab after ending the interview till the video is uploaded successfully. "}
+                    "Do not move or close tab after ending the interview till the video is uploaded successfully."}
                 </p>
               </div>
             </div>
@@ -210,150 +205,117 @@ export default function SystemCheck() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 flex flex-col items-center">
-       <div className="w-full max-w-6xl mb-6 flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-  <div className="text-sm text-gray-600 flex items-center">
-    <span>{getStatusMessage()}</span>
-  </div>
-  <Button disabled={!allTestsPassed} size="sm" onClick={() => alert("Interview starting...")}>
-    Start Interview
-  </Button>
-</div>
+      <main className="flex-1 p-4 overflow-hidden flex flex-col items-center justify-center">
+        <div className="w-full max-w-5xl mb-6 flex justify-between items-center">
+          <span className="text-sm text-gray-600">{getStatusMessage()}</span>
+          <Button disabled={!allTestsPassed} onClick={() => alert("Interview starting...")}>
+            Start Interview
+          </Button>
+        </div>
 
+        {/* Camera + System Instructions Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mb-6 overflow-auto">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3 text-xl">
+                <Camera className="w-6 h-6" />
+                <span>Camera Test</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center space-y-4">
+                <video ref={videoRef} autoPlay muted playsInline className="w-[240px] h-[180px] bg-black rounded-xl shadow-md" />
+                <Button onClick={startCamera} disabled={cameraEnabled}>Start Camera Test</Button>
+                {testStatus.camera === "passed" && <p className="text-green-600 flex items-center"><CheckCircle className="w-5 h-5 mr-2" />Passed</p>}
+                {testStatus.camera === "failed" && <p className="text-red-600 flex items-center"><XCircle className="w-5 h-5 mr-2" />{cameraError}</p>}
+                {testStatus.camera === "testing" && <p className="text-yellow-600 flex items-center"><AlertCircle className="w-5 h-5 animate-pulse mr-2" />Testing...</p>}
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl">
-          {/* Left column */}
-          <div className="space-y-6">
-            {/* System Test */}
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="text-xl">System Test Instructions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc list-inside space-y-0.5 text-sm text-gray-700">
-                  <li>Find a quiet, well-lit place.</li>
-                  <li>Allow camera and mic access.</li>
-                  <li>Click each test to verify devices.</li>
-                  <li>All tests must pass to proceed.</li>
-                </ul>
-              </CardContent>
-            </Card>
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-xl">System Requirements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside space-y-2 text-sm text-gray-700">
+                <li>
+                  <span className="font-semibold">Camera Quality</span>
+                  <ul className="list-disc list-inside ml-5 space-y-1">
+                    <li>Resolution must be <span className="font-semibold">at least 480p</span></li>
+                    <li>Frame rate must be <span className="font-semibold">24 FPS or higher</span></li>
+                  </ul>
+                </li>
+                <li>
+                  <span className="font-semibold">Microphone Input</span>
+                  <ul className="list-disc list-inside ml-5 space-y-1">
+                    <li>Input level must be <span className="font-semibold">above -40 dB</span></li>
+                    <li>Ensure your voice is <span className="font-semibold">clear and free from distortion or background noise</span></li>
+                  </ul>
+                </li>
+                <li>
+                  <span className="font-semibold">Network Speed</span>
+                  <ul className="list-disc list-inside ml-5 space-y-1">
+                    <li><span className="font-semibold">Minimum download and upload speed</span>: 2 Mbps each</li>
+                    <li>A <span className="font-semibold">stable internet connection</span> is essential</li>
+                  </ul>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Microphone Test */}
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-lg">
-                  <Mic className="w-4 h-4" />
-                  <span>Microphone Test</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center space-y-3">
-                  <Progress value={micVolume} max={100} className="w-full h-2" />
-                  <Button size="sm" onClick={startMicrophone} disabled={micEnabled}>
-                    Start Microphone Test
-                  </Button>
-                  {testStatus.microphone === "passed" && (
-                    <p className="text-green-600 text-sm flex items-center space-x-1">
-                      <CheckCircle className="w-4 h-4" /> <span>Passed</span>
-                    </p>
-                  )}
-                  {testStatus.microphone === "failed" && (
-                    <p className="text-red-600 text-sm flex items-center space-x-1">
-                      <XCircle className="w-4 h-4" /> <span>{micError}</span>
-                    </p>
-                  )}
-                  {testStatus.microphone === "testing" && (
-                    <p className="text-yellow-600 text-sm flex items-center space-x-1">
-                      <AlertCircle className="w-4 h-4 animate-pulse" /> <span>Testing...</span>
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+        {/* Microphone + Network Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl overflow-auto">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-lg">
+                <Mic className="w-4 h-4" />
+                <span>Microphone Test</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center space-y-3">
+                <Progress value={micVolume} max={100} className="w-full h-2" />
+                <Button onClick={startMicrophone} disabled={micEnabled}>Start Microphone Test</Button>
+                {testStatus.microphone === "passed" && <p className="text-green-600 flex items-center"><CheckCircle className="w-5 h-5 mr-2" />Passed</p>}
+                {testStatus.microphone === "failed" && <p className="text-red-600 flex items-center"><XCircle className="w-5 h-5 mr-2" />{micError}</p>}
+                {testStatus.microphone === "testing" && <p className="text-yellow-600 flex items-center"><AlertCircle className="w-5 h-5 animate-pulse mr-2" />Testing...</p>}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Network Test */}
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-lg">
-                  <Wifi className="w-4 h-4" />
-                  <span>Network Test</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center space-y-3 w-full">
-                  {testStatus.network === "testing" && (
-                    <>
-                      <p className="text-gray-700 text-sm">Testing...</p>
-                      <Progress className="w-full h-2" />
-                    </>
-                  )}
-                  {testStatus.network === "idle" && (
-                    <Button size="sm" variant="outline" onClick={runNetworkTest}>
-                      Run Network Test
-                    </Button>
-                  )}
-                  {testStatus.network === "passed" && networkResults && (
-                    <div className="text-gray-700 text-sm space-y-1">
-                      <p><strong>Download:</strong> {networkResults.download} Mbps</p>
-                      <p><strong>Upload:</strong> {networkResults.upload} Mbps</p>
-                      <p><strong>Ping:</strong> {networkResults.ping} ms</p>
-                    </div>
-                  )}
-                  {testStatus.network === "failed" && (
-                    <p className="text-red-600 text-sm">{networkError || "Network test failed."}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right column */}
-          <div className="space-y-6 flex justify-center">
-            {/* Camera Test */}
-            <Card className="w-full max-w-lg">
-  <CardHeader>
-    <CardTitle className="flex items-center space-x-3 text-xl">
-      <Camera className="w-6 h-6" />
-      <span>Camera Test</span>
-    </CardTitle>
-  </CardHeader>
-  <CardContent>
-    <div className="flex flex-col items-center space-y-4">
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        className="w-full max-w-[320px] h-[260px] bg-black rounded-xl shadow-md"
-      />
-      <Button size="default" onClick={startCamera} disabled={cameraEnabled} className="text-base px-6 py-2">
-        Start Camera Test
-      </Button>
-
-      {testStatus.camera === "passed" && (
-        <p className="text-green-600 text-base flex items-center space-x-2">
-          <CheckCircle className="w-5 h-5" />
-          <span>Passed</span>
-        </p>
-      )}
-      {testStatus.camera === "failed" && (
-        <p className="text-red-600 text-base flex items-center space-x-2">
-          <XCircle className="w-5 h-5" />
-          <span>{cameraError}</span>
-        </p>
-      )}
-      {testStatus.camera === "testing" && (
-        <p className="text-yellow-600 text-base flex items-center space-x-2">
-          <AlertCircle className="w-5 h-5 animate-pulse" />
-          <span>Testing...</span>
-        </p>
-      )}
-    </div>
-  </CardContent>
-</Card>
-
-          </div>
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-lg">
+                <Wifi className="w-4 h-4" />
+                <span>Network Test</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center space-y-3">
+                {testStatus.network === "testing" && (
+                  <>
+                    <p className="text-gray-700 text-sm">Testing...</p>
+                    <Progress className="w-full h-2" />
+                  </>
+                )}
+                {testStatus.network === "idle" && (
+                  <Button variant="outline" onClick={runNetworkTest}>Run Network Test</Button>
+                )}
+                {testStatus.network === "passed" && networkResults && (
+                  <div className="text-sm text-gray-700 text-center space-y-1">
+                    <p><strong>Download:</strong> {networkResults.download} Mbps</p>
+                    <p><strong>Upload:</strong> {networkResults.upload} Mbps</p>
+                    <p><strong>Ping:</strong> {networkResults.ping} ms</p>
+                  </div>
+                )}
+                {testStatus.network === "failed" && (
+                  <p className="text-red-600 text-sm">{networkError}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
